@@ -252,6 +252,7 @@ body::before{
     <div class="sub">ブルとうちゃんの 家事ばたけ生活</div>
   </div>
   <div class="date-bar" id="dateBar"></div>
+  <div id="syncStatus" style="text-align:center;font-size:.62rem;color:#3f5e2e;margin:-8px 0 10px;font-weight:700">⚪ 同期:オフライン(この端末のみ保存)</div>
 
   <div id="loading" class="loading">🍃 むらを読み込み中…</div>
 
@@ -346,7 +347,23 @@ body::before{
 
 <div id="toast"></div>
 
-<script>
+<script type="module">
+/* ================= 設定エリア =================
+   Firebaseコンソールで取得した firebaseConfig を貼り付けてください。
+   未設定のままでも localStorage のみで動作します(同期なし)。
+================================================ */
+const firebaseConfig = {
+  apiKey: "ここに貼り付け",
+  authDomain: "ここに貼り付け",
+  projectId: "ここに貼り付け",
+  storageBucket: "ここに貼り付け",
+  messagingSenderId: "ここに貼り付け",
+  appId: "ここに貼り付け"
+};
+// ふたりだけの合言葉(長くてランダムな文字列に変えてください)
+const ROOM_ID = "bull-uchan-himitsu-no-mori-2026";
+/* ============================================== */
+
 const KEY='kaji-battle-v1';
 const TITLES=[
   {min:0,  t:'もりの天使',  e:'😇'},
@@ -387,11 +404,53 @@ function defaultState(){
   };
 }
 
+let db=null,docRef=null,lastWritten='';
+const fbReady = firebaseConfig.projectId && firebaseConfig.projectId!=="ここに貼り付け";
+
+async function initFirebase(){
+  if(!fbReady)return;
+  try{
+    const {initializeApp}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const fs=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const app=initializeApp(firebaseConfig);
+    db=fs.getFirestore(app);
+    docRef=fs.doc(db,"rooms",ROOM_ID);
+    // 受信:相手の更新をリアルタイム反映
+    fs.onSnapshot(docRef,(snap)=>{
+      if(!snap.exists())return;
+      const incoming=snap.data().json;
+      if(!incoming||incoming===lastWritten)return;
+      try{
+        S=JSON.parse(incoming);
+        if(S.today.date!==todayKey())S.today={date:todayKey(),done:{}};
+        localStorage.setItem(KEY,incoming);
+        render();
+        setSync(true);
+      }catch(e){console.error(e);}
+    },(err)=>{console.error("同期エラー",err);setSync(false);});
+    // 初回:クラウドにデータがあれば優先
+    const first=await fs.getDoc(docRef);
+    if(first.exists()&&first.data().json){
+      S=JSON.parse(first.data().json);
+    }
+    window._fsSetDoc=fs.setDoc;
+    setSync(true);
+  }catch(e){
+    console.error("Firebase初期化失敗",e);
+    setSync(false);
+  }
+}
+function setSync(on){
+  const el=document.getElementById("syncStatus");
+  el.textContent=on?"🟢 同期:オンライン(ふたりのむらは つながっています)":"⚪ 同期:オフライン(この端末のみ保存)";
+}
+
 async function load(){
   try{
     const r=localStorage.getItem(KEY);
     S=r?JSON.parse(r):defaultState();
   }catch(e){ S=defaultState(); }
+  await initFirebase();
   // 旧バージョンからの引きつぎ
   if(!S.avatars){S.avatars=['🐶','🐷'];if(S.names[0]==='とくよし')S.names[0]='ブル';}
   if(S.avatars[1]==='👩')S.avatars[1]='🐷';
@@ -407,8 +466,15 @@ async function load(){
   render();
 }
 async function save(){
-  try{ localStorage.setItem(KEY,JSON.stringify(S)); }
-  catch(e){ console.error('保存エラー',e); }
+  const json=JSON.stringify(S);
+  try{ localStorage.setItem(KEY,json); }catch(e){}
+  if(db&&docRef&&window._fsSetDoc){
+    try{
+      lastWritten=json;
+      await window._fsSetDoc(docRef,{json,updatedAt:Date.now()});
+      setSync(true);
+    }catch(e){ console.error("クラウド保存エラー",e);setSync(false); }
+  }
 }
 
 function toast(msg){
@@ -630,6 +696,7 @@ function switchTab(btn){
   btn.classList.add('active');
   document.getElementById('page-'+btn.dataset.page).classList.add('active');
 }
+Object.assign(window,{doChore,approveChore,rejectChore,undoChore,closeDay,redeem,addChore,addShop,saveNames,resetAll,switchTab});
 load();
 </script>
 </body>
