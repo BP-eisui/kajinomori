@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>かじの森 〜ブルとうちゃんの家事ばたけ〜</title>
+<link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#bfe8e2;          /* 朝の空 */
+  --grass:#8fce6f;        /* 芝生 */
+  --grass-d:#6fb350;
+  --cream:#fff8e7;        /* メッセージ窓 */
+  --wood:#a9744a;         /* 看板 */
+  --ink:#5b4a36;          /* こげ茶文字 */
+  --sub:#9c8a73;
+  --p1:#f6a64b;           /* ブル オレンジ */
+  --p2:#f48fb1;           /* うちゃん ピンク */
+  --leaf:#5ea84e;
+  --danger:#e96b6b;
+  --gold:#f3c33c;
+  --r:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Kosugi Maru','M PLUS Rounded 1c',sans-serif;
+  color:var(--ink);
+  background:linear-gradient(180deg,var(--sky) 0%,#d9f0c8 38%,var(--grass) 38.2%,var(--grass-d) 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+  padding-bottom:96px;
+  font-size:15px;
+}
+/* 草テクスチャ */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;opacity:.25;
+  background-image:radial-gradient(circle 2px at 20% 60%,#fff3 99%,transparent),
+    radial-gradient(circle 2px at 70% 75%,#fff3 99%,transparent),
+    radial-gradient(circle 2px at 45% 88%,#fff3 99%,transparent);
+  background-size:140px 140px;
+}
+.wrap{max-width:430px;margin:0 auto;padding:14px 14px 0}
+
+/* 看板タイトル */
+.signboard{
+  background:var(--wood);
+  border-radius:18px;
+  padding:14px 12px 12px;
+  text-align:center;
+  box-shadow:0 5px 0 #7d5433, inset 0 0 0 3px #c4926a;
+  margin-bottom:6px;position:relative;
+}
+.signboard h1{
+  font-family:'M PLUS Rounded 1c';font-weight:800;font-size:1.35rem;
+  color:#fff7e3;letter-spacing:.06em;text-shadow:0 2px 0 #7d5433;
+}
+.signboard .sub{color:#f3ddbe;font-size:.68rem;margin-top:2px}
+.signboard::after{content:'🍃';position:absolute;top:-12px;right:14px;font-size:1.5rem;transform:rotate(20deg)}
+.date-bar{
+  text-align:center;font-weight:700;font-size:.8rem;color:#456b33;
+  background:#ffffffaa;border-radius:99px;padding:5px;margin:10px 0 14px;
+}
+
+/* プレイヤーカード */
+.players{display:flex;gap:10px;margin-bottom:14px}
+.pcard{
+  flex:1;background:var(--cream);border-radius:var(--r);
+  padding:12px 10px;text-align:center;position:relative;
+  border:3px solid #fff;box-shadow:0 4px 10px rgba(91,74,54,.18);
+}
+.pcard.p1{border-color:var(--p1)}
+.pcard.p2{border-color:var(--p2)}
+.pcard .avatar{
+  font-size:2.4rem;line-height:1;margin-bottom:4px;
+  filter:drop-shadow(0 3px 2px rgba(0,0,0,.15));
+}
+.pcard .pname{font-family:'M PLUS Rounded 1c';font-weight:800;font-size:1rem}
+.pcard .title-badge{
+  display:inline-block;font-size:.66rem;font-weight:700;
+  padding:3px 10px;border-radius:99px;margin:4px 0 8px;
+  background:#fff;border:1.5px dashed var(--sub);color:var(--ink);
+}
+.stat{display:flex;justify-content:space-between;font-size:.74rem;padding:2px 6px}
+.stat b{font-family:'M PLUS Rounded 1c';font-weight:800}
+.stat .pen{color:var(--danger)}
+.gauge{
+  height:14px;background:#e8dcc8;border-radius:99px;margin-top:7px;overflow:hidden;
+  border:2px solid #fff;box-shadow:inset 0 1px 3px rgba(0,0,0,.12);
+}
+.gauge-fill{
+  height:100%;border-radius:99px;transition:width .6s cubic-bezier(.2,.8,.2,1);
+  background:linear-gradient(90deg,#9bdc7c,var(--gold) 55%,var(--danger));
+}
+.gauge-label{font-size:.62rem;color:var(--sub);margin-top:3px}
+
+/* メッセージ窓セクション */
+.section{
+  background:var(--cream);border-radius:var(--r);padding:16px 14px;margin-bottom:14px;
+  border:3px solid #fff;box-shadow:0 4px 10px rgba(91,74,54,.15);
+}
+.section h2{
+  font-family:'M PLUS Rounded 1c';font-weight:800;font-size:1rem;color:var(--leaf);
+  margin-bottom:4px;
+}
+.section .hint{font-size:.7rem;color:var(--sub);margin-bottom:12px}
+
+/* クエスト行 */
+.quest{
+  background:#fff;border-radius:18px;padding:11px 12px;margin-bottom:10px;
+  border:2px solid #efe5d2;
+}
+.quest-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px}
+.quest-name{font-weight:700;font-size:.95rem}
+.quest-pt{
+  font-size:.66rem;font-weight:700;color:#fff;background:var(--danger);
+  border-radius:99px;padding:3px 8px;white-space:nowrap;
+}
+.quest-btns{display:flex;gap:7px;flex-wrap:wrap}
+.qbtn{
+  flex:1;min-width:96px;min-height:44px;border:none;border-radius:99px;padding:10px 6px;
+  font-family:'Kosugi Maru';font-weight:700;font-size:.82rem;color:#fff;
+  cursor:pointer;transition:transform .1s;box-shadow:0 3px 0 rgba(0,0,0,.15);
+}
+.qbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+.qbtn.b1{background:var(--p1)}
+.qbtn.b2{background:var(--p2)}
+.qbtn.approve{background:var(--leaf)}
+.qbtn.skip{background:#fff;color:var(--danger);border:2px dashed var(--danger);box-shadow:none}
+.quest.done{background:#f2f7ea;border-color:#cfe5bb;opacity:.85}
+.quest.done .quest-name::after{content:' 🌼クリア';font-size:.7rem;color:var(--leaf)}
+.quest.skipped{background:#fdf0f0;border-color:#f3cccc}
+.quest.skipped .quest-name::after{content:' 🐛サボり';font-size:.7rem;color:var(--danger)}
+.quest.pending{border:2px dashed var(--gold);background:#fffbe9}
+.done-by{font-size:.72rem;color:var(--sub);margin-top:4px}
+.undo{
+  background:none;border:none;color:var(--sub);font-size:.7rem;
+  text-decoration:underline;cursor:pointer;margin-top:5px;font-family:'Kosugi Maru';
+  min-height:32px;
+}
+
+/* ショップ */
+.shop-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:#fff;border-radius:18px;padding:11px 12px;margin-bottom:9px;
+  border:2px solid #efe5d2;
+}
+.shop-item .sname{font-size:.84rem;font-weight:700;line-height:1.35}
+.shop-item .scost{font-size:.68rem;color:var(--danger);font-weight:700;margin-top:2px}
+.shop-btns{display:flex;gap:6px;flex-shrink:0}
+.sbtn{
+  border:none;border-radius:99px;min-height:40px;padding:8px 12px;
+  font-family:'Kosugi Maru';font-weight:700;font-size:.72rem;color:#fff;cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);
+}
+.sbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+.sbtn:disabled{opacity:.3;cursor:default;box-shadow:none}
+.sbtn.s1{background:var(--p1)}
+.sbtn.s2{background:var(--p2)}
+
+/* グラフ */
+.chart{display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:8px}
+.chart .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;height:100%}
+.bar{width:100%;border-radius:6px 6px 0 0;min-height:3px;transition:height .5s}
+.bar.b-p1{background:var(--p1)}
+.bar.b-p2{background:var(--p2)}
+.col .lbl{font-size:.6rem;color:var(--sub);font-weight:700}
+.legend{display:flex;gap:14px;justify-content:center;font-size:.72rem;color:var(--sub);margin-top:8px;font-weight:700}
+.legend span::before{content:'● ';font-size:.85rem}
+.legend .l1::before{color:var(--p1)}
+.legend .l2::before{color:var(--p2)}
+
+/* ログ */
+.log{font-size:.74rem;color:var(--ink);max-height:180px;overflow-y:auto}
+.log div{padding:6px 2px;border-bottom:1.5px dashed #e8dcc8}
+
+/* ボタン共通 */
+.big-btn{
+  width:100%;border:none;border-radius:99px;padding:15px;min-height:52px;
+  font-family:'M PLUS Rounded 1c';font-weight:800;font-size:1rem;cursor:pointer;
+  background:linear-gradient(180deg,#ffd96b,var(--gold));color:#6b5212;
+  box-shadow:0 5px 0 #cfa024;transition:transform .1s;margin-bottom:6px;
+}
+.big-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #cfa024}
+.ghost-btn{
+  background:#fff;border:2px solid #e3d6bf;color:var(--ink);
+  border-radius:99px;padding:9px 14px;min-height:40px;font-size:.76rem;cursor:pointer;
+  font-family:'Kosugi Maru';font-weight:700;
+}
+.add-row{display:flex;gap:7px;margin-top:8px}
+.add-row input{
+  flex:1;min-width:0;background:#fff;border:2px solid #e3d6bf;
+  border-radius:14px;padding:10px 12px;color:var(--ink);
+  font-family:'Kosugi Maru';font-size:.85rem;min-height:44px;
+}
+.add-row input.pt-in{flex:0 0 64px}
+.add-row input:focus{outline:3px solid #bfe39f}
+
+/* 設定 */
+.settings-row{display:flex;gap:8px;margin-bottom:9px;align-items:center}
+.settings-row label{font-size:.74rem;color:var(--sub);flex:0 0 78px;font-weight:700}
+.settings-row input{
+  flex:1;min-width:0;background:#fff;border:2px solid #e3d6bf;
+  border-radius:14px;padding:9px 12px;color:var(--ink);
+  font-family:'Kosugi Maru';font-size:.85rem;min-height:44px;
+}
+
+/* 吹き出しトースト */
+#toast{
+  position:fixed;left:50%;bottom:104px;transform:translateX(-50%) translateY(16px) scale(.95);
+  background:var(--cream);color:var(--ink);padding:13px 20px;border-radius:20px;
+  font-weight:700;font-size:.85rem;opacity:0;pointer-events:none;
+  transition:all .25s;z-index:99;max-width:88vw;text-align:center;
+  border:3px solid #fff;box-shadow:0 6px 14px rgba(91,74,54,.3);
+}
+#toast::after{
+  content:'';position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:var(--cream);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+.shake{animation:shake .5s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.pop{animation:pop .4s}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15) rotate(-2deg)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* 丸タブ(あつ森メニュー風) */
+.tabs{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:center;gap:14px;
+  padding:10px 8px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.18));
+}
+.tab{
+  width:62px;height:62px;border-radius:50%;border:3px solid #fff;
+  background:var(--cream);color:var(--ink);cursor:pointer;
+  font-family:'Kosugi Maru';font-size:.56rem;font-weight:700;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  box-shadow:0 4px 8px rgba(91,74,54,.3);transition:transform .15s;
+}
+.tab .ico{font-size:1.35rem;line-height:1}
+.tab.active{background:var(--gold);transform:translateY(-6px);border-color:#fff}
+.page{display:none}
+.page.active{display:block}
+.loading{text-align:center;color:#456b33;padding:50px 0;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="signboard">
+    <h1>🌳 かじの森 🌳</h1>
+    <div class="sub">ブルとうちゃんの 家事ばたけ生活</div>
+  </div>
+  <div class="date-bar" id="dateBar"></div>
+
+  <div id="loading" class="loading">🍃 むらを読み込み中…</div>
+
+  <div id="app" style="display:none">
+
+    <div class="players">
+      <div class="pcard p1" id="card1">
+        <div class="avatar" id="ava1">🐶</div>
+        <div class="pname" id="pname1">ブル</div>
+        <div class="title-badge" id="title1"></div>
+        <div class="stat"><span>🌼クリア</span><b id="clear1">0</b></div>
+        <div class="stat"><span>🐛罰Pt</span><b class="pen" id="pen1">0</b></div>
+        <div class="gauge"><div class="gauge-fill" id="gauge1" style="width:0%"></div></div>
+        <div class="gauge-label">サボりゲージ</div>
+      </div>
+      <div class="pcard p2" id="card2">
+        <div class="avatar" id="ava2">🐷</div>
+        <div class="pname" id="pname2">うちゃん</div>
+        <div class="title-badge" id="title2"></div>
+        <div class="stat"><span>🌼クリア</span><b id="clear2">0</b></div>
+        <div class="stat"><span>🐛罰Pt</span><b class="pen" id="pen2">0</b></div>
+        <div class="gauge"><div class="gauge-fill" id="gauge2" style="width:0%"></div></div>
+        <div class="gauge-label">サボりゲージ</div>
+      </div>
+    </div>
+
+    <!-- きょうのおしごと -->
+    <div class="page active" id="page-quest">
+      <div class="section">
+        <h2>🪴 きょうのおしごと</h2>
+        <div class="hint">やった人のボタンをおして、あいてに承認してもらおう!</div>
+        <div id="questList"></div>
+        <div class="add-row">
+          <input id="newChore" placeholder="おしごとを追加(例:ゴミ出し)">
+          <input id="newChorePt" class="pt-in" type="number" value="10" min="1" aria-label="罰ポイント">
+          <button class="ghost-btn" onclick="addChore()">追加</button>
+        </div>
+      </div>
+      <button class="big-btn" onclick="closeDay()">🌙 きょうをおわる</button>
+      <div style="text-align:center;font-size:.66rem;color:#3f5e2e;margin-bottom:10px">※未処理のおしごとはサボり判定になります</div>
+    </div>
+
+    <!-- ばつげーむストア -->
+    <div class="page" id="page-shop">
+      <div class="section">
+        <h2>🏪 ばつげーむストア</h2>
+        <div class="hint">たまった罰Ptは、ここでせいさんするんだな!</div>
+        <div id="shopList"></div>
+        <div class="add-row">
+          <input id="newShop" placeholder="ばつげーむを追加">
+          <input id="newShopPt" class="pt-in" type="number" value="50" min="1" aria-label="必要ポイント">
+          <button class="ghost-btn" onclick="addShop()">追加</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- むらのきろく -->
+    <div class="page" id="page-stats">
+      <div class="section">
+        <h2>📒 7日間のクリアきろく</h2>
+        <div class="chart" id="chart"></div>
+        <div class="legend"><span class="l1" id="leg1"></span><span class="l2" id="leg2"></span></div>
+      </div>
+      <div class="section">
+        <h2>📮 むらのおしらせ</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <!-- せってい -->
+    <div class="page" id="page-set">
+      <div class="section">
+        <h2>🔧 せってい</h2>
+        <div class="settings-row"><label>なまえ1</label><input id="setName1"></div>
+        <div class="settings-row"><label>アイコン1</label><input id="setAva1" maxlength="4"></div>
+        <div class="settings-row"><label>なまえ2</label><input id="setName2"></div>
+        <div class="settings-row"><label>アイコン2</label><input id="setAva2" maxlength="4"></div>
+        <button class="ghost-btn" onclick="saveNames()" style="width:100%;margin-top:6px">💾 ほぞんする</button>
+        <button class="ghost-btn" onclick="resetAll()" style="width:100%;margin-top:10px;color:var(--danger);border-color:#f3cccc">⚠️ むらをリセット</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-page="quest" onclick="switchTab(this)"><span class="ico">🪴</span>おしごと</button>
+  <button class="tab" data-page="shop" onclick="switchTab(this)"><span class="ico">🏪</span>ストア</button>
+  <button class="tab" data-page="stats" onclick="switchTab(this)"><span class="ico">📒</span>きろく</button>
+  <button class="tab" data-page="set" onclick="switchTab(this)"><span class="ico">🔧</span>せってい</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const KEY='kaji-battle-v1';
+const TITLES=[
+  {min:0,  t:'もりの天使',  e:'😇'},
+  {min:30, t:'ちょいサボ妖精', e:'😅'},
+  {min:80, t:'サボりむし',  e:'🐛'},
+  {min:150,t:'家事ほうきの小鬼', e:'👹'},
+  {min:250,t:'でんせつの鬼', e:'💀'},
+  {min:400,t:'家事大魔王',  e:'👿'},
+  {min:600,t:'旅行プレゼント確定王', e:'🏆'},
+];
+const todayKey=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+
+let S=null;
+
+function defaultState(){
+  return {
+    names:['ブル','うちゃん'],
+    avatars:['🐶','🐷'],
+    chores:[
+      {id:'c1',name:'食器洗い',pt:10},
+      {id:'c2',name:'片付け',pt:10},
+      {id:'c3',name:'洗濯(干すまで)',pt:15},
+      {id:'c4',name:'掃除',pt:15},
+    ],
+    shop:[
+      {id:'s1',name:'コンビニスイーツおごり',pt:50},
+      {id:'s2',name:'マッサージ15分',pt:80},
+      {id:'s3',name:'次の休日の家事ぜんぶ担当',pt:150},
+      {id:'s4',name:'ディナーごちそう',pt:250},
+      {id:'s5',name:'日帰りお出かけ全額負担',pt:400},
+      {id:'s6',name:'次の旅行プレゼント🏆',pt:600},
+    ],
+    penalty:[0,0],
+    clears:[0,0],
+    today:{date:todayKey(),done:{}},
+    history:{},
+    log:[]
+  };
+}
+
+async function load(){
+  try{
+    const r=localStorage.getItem(KEY);
+    S=r?JSON.parse(r):defaultState();
+  }catch(e){ S=defaultState(); }
+  // 旧バージョンからの引きつぎ
+  if(!S.avatars){S.avatars=['🐶','🐷'];if(S.names[0]==='とくよし')S.names[0]='ブル';}
+  if(S.avatars[1]==='👩')S.avatars[1]='🐷';
+  if(S.names[1]==='彼女')S.names[1]='うちゃん';
+  const wc=S.chores.find(c=>c.name==='洗濯');if(wc)wc.name='洗濯(干すまで)';
+  if(!S.shop.find(s=>s.id==='s6')){
+    S.shop.push({id:'s5',name:'日帰りお出かけ全額負担',pt:400},{id:'s6',name:'次の旅行プレゼント🏆',pt:600});
+  }
+  if(S.today.date!==todayKey()) S.today={date:todayKey(),done:{}};
+  await save();
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').style.display='block';
+  render();
+}
+async function save(){
+  try{ localStorage.setItem(KEY,JSON.stringify(S)); }
+  catch(e){ console.error('保存エラー',e); }
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),2300);
+}
+function addLog(msg){
+  S.log.unshift(`${todayKey()} ${msg}`);
+  if(S.log.length>50)S.log.length=50;
+}
+function titleOf(p){
+  let cur=TITLES[0];
+  for(const t of TITLES) if(p>=t.min) cur=t;
+  return cur;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+function render(){
+  const d=new Date();
+  const wd='日月火水木金土'[d.getDay()];
+  document.getElementById('dateBar').textContent=`🍃 ${d.getMonth()+1}月${d.getDate()}日(${wd}) のむらのようす`;
+
+  for(let i=0;i<2;i++){
+    const n=i+1;
+    document.getElementById('pname'+n).textContent=S.names[i];
+    document.getElementById('clear'+n).textContent=S.clears[i];
+    document.getElementById('pen'+n).textContent=S.penalty[i];
+    const t=titleOf(S.penalty[i]);
+    document.getElementById('title'+n).textContent=t.e+' '+t.t;
+    document.getElementById('ava'+n).textContent=(S.avatars&&S.avatars[i])||['🐶','🐷'][i];
+    document.getElementById('gauge'+n).style.width=Math.min(100,S.penalty[i]/600*100)+'%';
+  }
+  document.getElementById('setName1').value=S.names[0];
+  document.getElementById('setName2').value=S.names[1];
+  document.getElementById('setAva1').value=(S.avatars&&S.avatars[0])||'🐶';
+  document.getElementById('setAva2').value=(S.avatars&&S.avatars[1])||'🐷';
+  document.getElementById('leg1').textContent=S.names[0];
+  document.getElementById('leg2').textContent=S.names[1];
+
+  // おしごと一覧
+  const ql=document.getElementById('questList');ql.innerHTML='';
+  S.chores.forEach(c=>{
+    const st=S.today.done[c.id];
+    const div=document.createElement('div');
+    div.className='quest'+(st?(st.pending?' pending':(String(st.by).startsWith('skip')?' skipped':' done')):'');
+    let inner=`<div class="quest-top"><span class="quest-name">${esc(c.name)}</span><span class="quest-pt">サボると+${c.pt}Pt</span></div>`;
+    if(!st){
+      inner+=`<div class="quest-btns">
+        <button class="qbtn b1" onclick="doChore('${c.id}',0)">${esc(S.names[0])}がやった!</button>
+        <button class="qbtn b2" onclick="doChore('${c.id}',1)">${esc(S.names[1])}がやった!</button>
+      </div>`;
+    }else if(st.pending){
+      inner+=`<div class="done-by">⏳ ${esc(S.names[st.by])}が申告中… ${esc(S.names[1-st.by])}のかくにん待ち</div>
+      <div class="quest-btns" style="margin-top:8px">
+        <button class="qbtn approve" onclick="approveChore('${c.id}')">✔ ${esc(S.names[1-st.by])}が承認</button>
+        <button class="qbtn skip" onclick="rejectChore('${c.id}')">✖ 却下</button>
+      </div>`;
+    }else{
+      const by=st.by;
+      if(String(by).startsWith('skip')){
+        const who=Number(String(by).split('-')[1]);
+        inner+=`<div class="done-by">🐛 ${esc(S.names[who])}に罰 +${c.pt}Pt …とほほ</div>`;
+      }else{
+        inner+=`<div class="done-by">🌼 ${esc(S.names[by])}がクリア!(承認ずみ)</div>`;
+      }
+      inner+=`<button class="undo" onclick="undoChore('${c.id}')">とりけす</button>`;
+    }
+    div.innerHTML=inner;
+    ql.appendChild(div);
+  });
+
+  // ストア
+  const sl=document.getElementById('shopList');sl.innerHTML='';
+  S.shop.forEach(s=>{
+    const div=document.createElement('div');div.className='shop-item';
+    div.innerHTML=`<div><div class="sname">${esc(s.name)}</div><div class="scost">ひつよう:${s.pt}Pt</div></div>
+      <div class="shop-btns">
+        <button class="sbtn s1" ${S.penalty[0]<s.pt?'disabled':''} onclick="redeem('${s.id}',0)">${esc(S.names[0])}</button>
+        <button class="sbtn s2" ${S.penalty[1]<s.pt?'disabled':''} onclick="redeem('${s.id}',1)">${esc(S.names[1])}</button>
+      </div>`;
+    sl.appendChild(div);
+  });
+
+  // グラフ
+  const ch=document.getElementById('chart');ch.innerHTML='';
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const dd=new Date();dd.setDate(dd.getDate()-i);
+    const k=`${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}-${String(dd.getDate()).padStart(2,'0')}`;
+    days.push({k,lbl:`${dd.getMonth()+1}/${dd.getDate()}`});
+  }
+  const max=Math.max(1,...days.map(d=>{const h=S.history[d.k];return h?Math.max(h.c[0],h.c[1]):0}));
+  days.forEach(d=>{
+    const h=S.history[d.k]||{c:[0,0]};
+    const col=document.createElement('div');col.className='col';
+    col.innerHTML=`<div class="bar b-p1" style="height:${h.c[0]/max*70}px"></div>
+      <div class="bar b-p2" style="height:${h.c[1]/max*70}px"></div>
+      <div class="lbl">${d.lbl}</div>`;
+    ch.appendChild(col);
+  });
+
+  // ログ
+  document.getElementById('log').innerHTML=S.log.length
+    ? S.log.map(l=>`<div>${esc(l)}</div>`).join('')
+    : '<div>まだおしらせはありません。さいしょのおしごとをやってみよう!</div>';
+}
+
+async function doChore(id,who){
+  S.today.done[id]={by:who,pending:true};
+  const c=S.chores.find(x=>x.id===id);
+  addLog(`📣 ${S.names[who]}が「${c.name}」をやったと申告(承認まち)`);
+  await save();render();
+  toast(`📣 申告したよ! ${S.names[1-who]}にかくにんしてもらおう`);
+}
+async function approveChore(id){
+  const st=S.today.done[id];if(!st||!st.pending)return;
+  const who=st.by;
+  st.pending=false;
+  S.clears[who]++;
+  const h=S.history[todayKey()]||(S.history[todayKey()]={c:[0,0]});
+  h.c[who]++;
+  const c=S.chores.find(x=>x.id===id);
+  addLog(`🌼 ${S.names[1-who]}が承認!「${c.name}」${S.names[who]}のクリアかくてい`);
+  await save();render();
+  document.getElementById('card'+(who+1)).classList.add('pop');
+  setTimeout(()=>document.getElementById('card'+(who+1)).classList.remove('pop'),450);
+  toast(`🌼 承認! ${S.names[who]} ナイス家事だなも!`);
+}
+async function rejectChore(id){
+  const st=S.today.done[id];if(!st||!st.pending)return;
+  const c=S.chores.find(x=>x.id===id);
+  if(!confirm(`「${c.name}」の申告をきゃっかしますか?`))return;
+  addLog(`🙅 ${S.names[1-st.by]}が「${c.name}」の申告をきゃっか…!`);
+  delete S.today.done[id];
+  await save();render();
+  toast('🙅 きゃっかされた…やりなおし!');
+}
+async function undoChore(id){
+  const st=S.today.done[id];if(!st)return;
+  const c=S.chores.find(x=>x.id===id);
+  if(st.pending){
+    delete S.today.done[id];
+  }else if(String(st.by).startsWith('skip')){
+    const who=Number(String(st.by).split('-')[1]);
+    S.penalty[who]=Math.max(0,S.penalty[who]-c.pt);
+    delete S.today.done[id];
+  }else{
+    S.clears[st.by]=Math.max(0,S.clears[st.by]-1);
+    const h=S.history[todayKey()];if(h)h.c[st.by]=Math.max(0,h.c[st.by]-1);
+    delete S.today.done[id];
+  }
+  await save();render();
+}
+async function closeDay(){
+  const pending=S.chores.filter(c=>S.today.done[c.id]&&S.today.done[c.id].pending);
+  if(pending.length){
+    toast('⏳ かくにん待ちのおしごとがあるよ!先に承認/却下してね');
+    return;
+  }
+  const undone=S.chores.filter(c=>!S.today.done[c.id]);
+  if(!undone.length){toast('🎉 ぜんぶクリアずみ!きょうも平和ななむらでした');return;}
+  for(const c of undone){
+    const who=prompt(`「${c.name}」がまだです。サボったのは?\n1 = ${S.names[0]} / 2 = ${S.names[1]} / 0 = きょうは対象外`,'2');
+    if(who==='1'||who==='2'){
+      const idx=Number(who)-1;
+      S.today.done[c.id]={by:'skip-'+idx};
+      S.penalty[idx]+=c.pt;
+      addLog(`🐛 ${S.names[idx]}が「${c.name}」をサボり… 罰+${c.pt}Pt`);
+      document.getElementById('card'+(idx+1)).classList.add('shake');
+      setTimeout(()=>document.getElementById('card'+(idx+1)).classList.remove('shake'),550);
+    }else{
+      S.today.done[c.id]={by:'skip-x'};
+    }
+  }
+  await save();render();
+  toast('🌙 きょうのむらはおしまい。おつかれさま!');
+}
+async function redeem(id,who){
+  const s=S.shop.find(x=>x.id===id);
+  if(S.penalty[who]<s.pt)return;
+  if(!confirm(`${S.names[who]}が「${s.name}」で ${s.pt}Pt をせいさんします。OK?`))return;
+  S.penalty[who]-=s.pt;
+  addLog(`🎟️ ${S.names[who]}がばつげーむ「${s.name}」をじっこう!(-${s.pt}Pt)`);
+  await save();render();
+  toast(`🏪 ${S.names[who]}、ばつげーむ執行だなも!`);
+}
+async function addChore(){
+  const n=document.getElementById('newChore').value.trim();
+  const p=Math.max(1,Number(document.getElementById('newChorePt').value)||10);
+  if(!n)return;
+  S.chores.push({id:'c'+Date.now(),name:n,pt:p});
+  document.getElementById('newChore').value='';
+  await save();render();toast('🪴 おしごとを追加したよ!');
+}
+async function addShop(){
+  const n=document.getElementById('newShop').value.trim();
+  const p=Math.max(1,Number(document.getElementById('newShopPt').value)||50);
+  if(!n)return;
+  S.shop.push({id:'s'+Date.now(),name:n,pt:p});
+  document.getElementById('newShop').value='';
+  await save();render();toast('🏪 ばつげーむを追加したよ!');
+}
+async function saveNames(){
+  S.names[0]=document.getElementById('setName1').value.trim()||'プレイヤー1';
+  S.names[1]=document.getElementById('setName2').value.trim()||'プレイヤー2';
+  S.avatars=S.avatars||['🐶','🐷'];
+  S.avatars[0]=document.getElementById('setAva1').value.trim()||'🐶';
+  S.avatars[1]=document.getElementById('setAva2').value.trim()||'🐷';
+  await save();render();toast('💾 ほぞんしたよ!');
+}
+async function resetAll(){
+  if(!confirm('ほんとうにむらをリセットしますか?'))return;
+  S=defaultState();await save();render();toast('🔄 あたらしいむらができました');
+}
+function switchTab(btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('page-'+btn.dataset.page).classList.add('active');
+}
+load();
+</script>
+</body>
+</html>
