@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>かじの森 〜ブルとうちゃんの家事ばたけ〜</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#8fce6f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="かじの森">
 <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -354,8 +361,8 @@ body::before{
    ・X-Master-Key (Secret Key)
    を貼り付けてください。未設定のままなら localStorage のみで動作します(同期なし)。
 ================================================ */
-const JSONBIN_ID  = "6a2cb4afda38895dfeb855df";
-const JSONBIN_KEY = "$2a$10$3wz1A/I.WMON9Bi6ID.ka.R5ITw7GKgzfJJV5zJUOTGAwSfXDE26e";
+const JSONBIN_ID  = "ここにBIN_IDを貼り付け";
+const JSONBIN_KEY = "ここにX-Master-Keyを貼り付け";
 const POLL_INTERVAL_MS = 8000; // 何ミリ秒ごとに相手の更新をチェックするか(8秒)
 /* ============================================== */
 
@@ -707,6 +714,11 @@ function switchTab(btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('page-'+btn.dataset.page).classList.add('active');
+}
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("service-worker.js").catch(e=>console.error("SW登録失敗",e));
+  });
 }
 load();
 </script>
