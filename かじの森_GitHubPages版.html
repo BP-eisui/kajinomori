@@ -347,21 +347,16 @@ body::before{
 
 <div id="toast"></div>
 
-<script type="module">
+<script>
 /* ================= 設定エリア =================
-   Firebaseコンソールで取得した firebaseConfig を貼り付けてください。
-   未設定のままでも localStorage のみで動作します(同期なし)。
+   JSONBin.io (https://jsonbin.io) で作成した
+   ・BIN_ID
+   ・X-Master-Key (Secret Key)
+   を貼り付けてください。未設定のままなら localStorage のみで動作します(同期なし)。
 ================================================ */
-const firebaseConfig = {
-  apiKey: "ここに貼り付け",
-  authDomain: "ここに貼り付け",
-  projectId: "ここに貼り付け",
-  storageBucket: "ここに貼り付け",
-  messagingSenderId: "ここに貼り付け",
-  appId: "ここに貼り付け"
-};
-// ふたりだけの合言葉(長くてランダムな文字列に変えてください)
-const ROOM_ID = "bull-uchan-himitsu-no-mori-2026";
+const JSONBIN_ID  = "6a2cb4afda38895dfeb855df";
+const JSONBIN_KEY = "$2a$10$3wz1A/I.WMON9Bi6ID.ka.R5ITw7GKgzfJJV5zJUOTGAwSfXDE26e";
+const POLL_INTERVAL_MS = 8000; // 何ミリ秒ごとに相手の更新をチェックするか(8秒)
 /* ============================================== */
 
 const KEY='kaji-battle-v1';
@@ -404,45 +399,43 @@ function defaultState(){
   };
 }
 
-let db=null,docRef=null,lastWritten='';
-const fbReady = firebaseConfig.projectId && firebaseConfig.projectId!=="ここに貼り付け";
+const syncReady = JSONBIN_ID!=="ここにBIN_IDを貼り付け" && JSONBIN_KEY!=="ここにX-Master-Keyを貼り付け";
+let lastSeenStr='';
+let isFetching=false;
 
-async function initFirebase(){
-  if(!fbReady)return;
+function setSync(on,err){
+  const el=document.getElementById("syncStatus");
+  if(!syncReady){el.textContent="⚪ 同期:オフライン(この端末のみ保存)";return;}
+  el.textContent=on?"🟢 同期:オンライン(ふたりのむらは つながっています)"
+                   :(err?"🔴 同期エラー(つぎの自動チェックで再試行します)":"⚪ 同期:接続中...");
+}
+
+async function fetchRemote(applyIfChanged){
+  if(!syncReady||isFetching)return;
+  isFetching=true;
   try{
-    const {initializeApp}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
-    const fs=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    const app=initializeApp(firebaseConfig);
-    db=fs.getFirestore(app);
-    docRef=fs.doc(db,"rooms",ROOM_ID);
-    // 受信:相手の更新をリアルタイム反映
-    fs.onSnapshot(docRef,(snap)=>{
-      if(!snap.exists())return;
-      const incoming=snap.data().json;
-      if(!incoming||incoming===lastWritten)return;
-      try{
-        S=JSON.parse(incoming);
-        if(S.today.date!==todayKey())S.today={date:todayKey(),done:{}};
-        localStorage.setItem(KEY,incoming);
-        render();
-        setSync(true);
-      }catch(e){console.error(e);}
-    },(err)=>{console.error("同期エラー",err);setSync(false);});
-    // 初回:クラウドにデータがあれば優先
-    const first=await fs.getDoc(docRef);
-    if(first.exists()&&first.data().json){
-      S=JSON.parse(first.data().json);
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`,{
+      headers:{ "X-Master-Key": JSONBIN_KEY }
+    });
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    const data=await res.json();
+    const remote=data.record;
+    if(!remote||!remote.json)return;
+    if(applyIfChanged&&remote.json!==lastSeenStr){
+      lastSeenStr=remote.json;
+      const incoming=JSON.parse(remote.json);
+      if(incoming.today.date!==todayKey())incoming.today={date:todayKey(),done:{}};
+      S=incoming;
+      localStorage.setItem(KEY,remote.json);
+      render();
+    }else if(!applyIfChanged){
+      lastSeenStr=remote.json;
     }
-    window._fsSetDoc=fs.setDoc;
     setSync(true);
   }catch(e){
-    console.error("Firebase初期化失敗",e);
-    setSync(false);
-  }
-}
-function setSync(on){
-  const el=document.getElementById("syncStatus");
-  el.textContent=on?"🟢 同期:オンライン(ふたりのむらは つながっています)":"⚪ 同期:オフライン(この端末のみ保存)";
+    console.error("JSONBin取得エラー",e);
+    setSync(false,true);
+  }finally{ isFetching=false; }
 }
 
 async function load(){
@@ -450,7 +443,18 @@ async function load(){
     const r=localStorage.getItem(KEY);
     S=r?JSON.parse(r):defaultState();
   }catch(e){ S=defaultState(); }
-  await initFirebase();
+  if(syncReady){
+    await fetchRemote(false); // 起動時はクラウドの最新を必ず取得して上書き
+    if(lastSeenStr){
+      try{
+        const incoming=JSON.parse(lastSeenStr);
+        if(incoming.today.date!==todayKey())incoming.today={date:todayKey(),done:{}};
+        S=incoming;
+        localStorage.setItem(KEY,lastSeenStr);
+      }catch(e){}
+    }
+    setInterval(()=>fetchRemote(true),POLL_INTERVAL_MS);
+  }
   // 旧バージョンからの引きつぎ
   if(!S.avatars){S.avatars=['🐶','🐷'];if(S.names[0]==='とくよし')S.names[0]='ブル';}
   if(S.avatars[1]==='👩')S.avatars[1]='🐷';
@@ -468,12 +472,20 @@ async function load(){
 async function save(){
   const json=JSON.stringify(S);
   try{ localStorage.setItem(KEY,json); }catch(e){}
-  if(db&&docRef&&window._fsSetDoc){
+  if(syncReady){
     try{
-      lastWritten=json;
-      await window._fsSetDoc(docRef,{json,updatedAt:Date.now()});
+      lastSeenStr=json;
+      const res=await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,{
+        method:"PUT",
+        headers:{ "Content-Type":"application/json", "X-Master-Key": JSONBIN_KEY }
+      , body: JSON.stringify({json})
+      });
+      if(!res.ok)throw new Error("HTTP "+res.status);
       setSync(true);
-    }catch(e){ console.error("クラウド保存エラー",e);setSync(false); }
+    }catch(e){
+      console.error("JSONBin保存エラー",e);
+      setSync(false,true);
+    }
   }
 }
 
@@ -696,7 +708,6 @@ function switchTab(btn){
   btn.classList.add('active');
   document.getElementById('page-'+btn.dataset.page).classList.add('active');
 }
-Object.assign(window,{doChore,approveChore,rejectChore,undoChore,closeDay,redeem,addChore,addShop,saveNames,resetAll,switchTab});
 load();
 </script>
 </body>
