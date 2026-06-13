@@ -1,0 +1,25 @@
+{
+  "name": "かじの森 〜ブルとうちゃんの家事ばたけ〜",
+  "short_name": "かじの森",
+  "description": "家事をやらないと罰Ptが溜まる、ふたりの家事バトルアプリ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#bfe8e2",
+  "theme_color": "#8fce6f",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
